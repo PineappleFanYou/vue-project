@@ -2,6 +2,7 @@
   <div class="home">
     <el-container>
       <el-aside width="200px">
+        <div class="logo"></div>
            <el-menu
       :router = 'true'
       :unique-opened='true'
