@@ -6,7 +6,6 @@
       :model="loginForm"
       :rules="rules"
       ref="loginForm"
-      label-width="100px"
       class="demo-ruleForm"
     >
       <el-form-item prop="username">
