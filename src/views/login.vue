@@ -51,7 +51,7 @@ export default {
               // console.log(res)
               if (res.data.meta.status === 200) {
                 // 将token 存储在本地存储
-                localStorage.setItem('itcast_manager_token', res.data.meta.token)
+                localStorage.setItem('itcast_manager_token', res.data.data.token)
                 this.$router.push({ name: 'home' })
                 // 弹框提示
                 this.$message({

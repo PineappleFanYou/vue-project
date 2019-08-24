@@ -12,7 +12,7 @@
       <!-- 这个userKey是我们以后要用的，因为v-model是双向数据绑定，搜索用的，到时候我们再搞一下userKey就行了 -->
       <el-input
         placeholder="请输入内容"
-        v-model="userKey"
+        v-model="userobj.query"
         class="input-with-select"
         style="width:400px;margin-right:15px"
       >
@@ -22,14 +22,14 @@
     </div>
     <!-- table表格 -->
     <template>
-      <el-table :data="tableData" style="width: 100%" border>
+      <el-table :data="userList" style="width: 100%" border>
         <el-table-column type="index" width="50"></el-table-column>
-        <el-table-column prop="date" label="日期" width="180"></el-table-column>
-        <el-table-column prop="name" label="姓名" width="180"></el-table-column>
-        <el-table-column prop="address" label="地址"></el-table-column>
+        <el-table-column prop="username" label="姓名" width="180"></el-table-column>
+        <el-table-column prop="email" label="邮箱" width="180"></el-table-column>
+        <el-table-column prop="mobile" label="电话"></el-table-column>
         <el-table-column label="用户状态">
-          <template>
-              <el-switch v-model="status"  active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+          <template slot-scope="scope">
+              <el-switch v-model="scope.row.mg_state"  active-color="#13ce66" inactive-color="#ff4949"></el-switch>
           </template>
         </el-table-column>
         <el-table-column label="操作" style="width:280px">
@@ -50,34 +50,43 @@
   </div>
 </template>
 <script>
+// 调用axios接口
+import { getAllusers } from '@/api/user_index.js'
 export default {
   data () {
     return {
       userKey: '',
-      status: true,
-      tableData: [
-        {
-          date: '2016-05-02',
-          name: '王小虎',
-          address: '上海市普陀区金沙江路 1518 弄'
-        },
-        {
-          date: '2016-05-04',
-          name: '王小虎',
-          address: '上海市普陀区金沙江路 1517 弄'
-        },
-        {
-          date: '2016-05-01',
-          name: '王小虎',
-          address: '上海市普陀区金沙江路 1519 弄'
-        },
-        {
-          date: '2016-05-03',
-          name: '王小虎',
-          address: '上海市普陀区金沙江路 1516 弄'
-        }
-      ]
+      userList: [],
+      userobj: {
+        // query:查询参数，可以为空
+        // pagenum: 当前页码，不能为空，这里暂时写1页
+        // pagesize:每页显示的条数，不能为空
+        query: '',
+        pagenum: 1,
+        pagesize: 2
+      }
     }
+  },
+  methods: {
+
+  },
+  // 这些数据是一加载就要显示出来的，所以只有钩子函数适合
+  mounted () {
+    getAllusers(this.userobj)
+      .then((res) => {
+        // 这里还要判断一下否是 200，因为有可能是无效的token，那就是400，打印出来看到的
+        console.log(res)
+        if (res.data.meta.status === 200) {
+          this.userList = res.data.data.users
+        } else if (res.data.meta.status === 400) {
+          // 那就给一个错误提示，而且强制跳转到登录页面,这个$message是element-ui里面的内置成员，只要我们下载引入了，就有这个东西
+          this.$message.error(res.data.meta.msg)
+          this.$router.push({ name: 'login' })
+        }
+      })
+      .catch((err) => {
+        console.log(err)
+      })
   }
 }
 </script>
