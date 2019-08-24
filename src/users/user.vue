@@ -48,6 +48,23 @@
         </el-table-column>
       </el-table>
     </template>
+    <!-- 分页展示区域 -->
+    <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="userobj.pagenum"
+      :page-sizes="[1,2,3,4]"
+      :page-size="userobj.pagesize"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total">
+      <!--  @size-change="handleSizeChange" 当切换sizes下拉列表是触发
+            @current-change="handleCurrentChange" 当切换当前页码是触发
+            :current-page="currentPage4" 当前页码
+            :page-sizes="[100, 200, 300, 400]" size下拉列表中选项
+            :page-size="100" 默认每页显示的记录数
+            layout="total, sizes, prev, pager, next, jumper" 分页组件的布局结构
+            :total="400" 总记录数 -->
+    </el-pagination>
   </div>
 </template>
 <script>
@@ -56,6 +73,7 @@ import { getAllusers } from '@/api/user_index.js'
 export default {
   data () {
     return {
+      total: 0,
       userKey: '',
       userList: [],
       userobj: {
@@ -69,6 +87,14 @@ export default {
     }
   },
   methods: {
+    // 当切换sizes下拉列表时触发
+    handleSizeChange (val) {
+      console.log(`每页 ${val} 条`)
+    },
+    // 当切换当前页码时触发
+    handleCurrentChange (val) {
+      console.log(`当前页: ${val}`)
+    },
     init () {
       getAllusers(this.userobj)
         .then((res) => {
@@ -76,6 +102,8 @@ export default {
           // console.log(res)
           if (res.data.meta.status === 200) {
             this.userList = res.data.data.users
+            // 获取记录总数
+            this.total = res.data.data.total
           } else if (res.data.meta.status === 400) {
           // 那就给一个错误提示，而且强制跳转到登录页面,这个$message是element-ui里面的内置成员，只要我们下载引入了，就有这个东西
             this.$message.error(res.data.meta.msg)
