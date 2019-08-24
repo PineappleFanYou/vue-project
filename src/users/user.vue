@@ -89,11 +89,17 @@ export default {
   methods: {
     // 当切换sizes下拉列表时触发
     handleSizeChange (val) {
-      console.log(`每页 ${val} 条`)
+      // console.log(`每页 ${val} 条`)
+      this.userobj.pagesize = val
+      this.init()
     },
     // 当切换当前页码时触发
     handleCurrentChange (val) {
-      console.log(`当前页: ${val}`)
+      // console.log(`当前页: ${val}`)
+      // 1.修改参数
+      this.userobj.pagenum = val
+      // 2.重新请求
+      this.init()
     },
     init () {
       getAllusers(this.userobj)
