@@ -15,8 +15,9 @@
         v-model="userobj.query"
         class="input-with-select"
         style="width:400px;margin-right:15px"
+        @keydown.enter.native = 'init'
       >
-        <el-button slot="append" icon="el-icon-search"></el-button>
+        <el-button slot="append" icon="el-icon-search" @click="init"></el-button>
       </el-input>
       <el-button type="success" round>添加用户</el-button>
     </div>
@@ -68,25 +69,27 @@ export default {
     }
   },
   methods: {
-
+    init () {
+      getAllusers(this.userobj)
+        .then((res) => {
+        // 这里还要判断一下否是 200，因为有可能是无效的token，那就是400，打印出来看到的
+          // console.log(res)
+          if (res.data.meta.status === 200) {
+            this.userList = res.data.data.users
+          } else if (res.data.meta.status === 400) {
+          // 那就给一个错误提示，而且强制跳转到登录页面,这个$message是element-ui里面的内置成员，只要我们下载引入了，就有这个东西
+            this.$message.error(res.data.meta.msg)
+            this.$router.push({ name: 'login' })
+          }
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    }
   },
   // 这些数据是一加载就要显示出来的，所以只有钩子函数适合
   mounted () {
-    getAllusers(this.userobj)
-      .then((res) => {
-        // 这里还要判断一下否是 200，因为有可能是无效的token，那就是400，打印出来看到的
-        console.log(res)
-        if (res.data.meta.status === 200) {
-          this.userList = res.data.data.users
-        } else if (res.data.meta.status === 400) {
-          // 那就给一个错误提示，而且强制跳转到登录页面,这个$message是element-ui里面的内置成员，只要我们下载引入了，就有这个东西
-          this.$message.error(res.data.meta.msg)
-          this.$router.push({ name: 'login' })
-        }
-      })
-      .catch((err) => {
-        console.log(err)
-      })
+    this.init()
   }
 }
 </script>
