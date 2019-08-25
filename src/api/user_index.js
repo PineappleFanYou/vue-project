@@ -35,3 +35,12 @@ export const updataUserState = (uid, type) => {
     method: 'put'
   })
 }
+
+// 实现用户的删除
+export const delUserById = (id) => {
+  // console.log(id)
+  return axios({
+    url: `users/${id}`,
+    method: 'delete'
+  })
+}

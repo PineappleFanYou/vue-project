@@ -46,7 +46,7 @@
               <el-button type="warning" icon="el-icon-share"></el-button>
             </el-tooltip>
             <el-tooltip class="item" effect="dark" content="删除" placement="top-start">
-              <el-button type="danger" icon="el-icon-delete"></el-button>
+              <el-button type="danger" icon="el-icon-delete"  @click="delUser(scope.row.id)"></el-button>
             </el-tooltip>
             </template>
         </el-table-column>
@@ -114,10 +114,46 @@
 </template>
 <script>
 // 调用axios接口
-import { getAllusers, addUsers, editUser, updataUserState } from '@/api/user_index.js'
+import { getAllusers, addUsers, editUser, updataUserState, delUserById } from '@/api/user_index.js'
 export default {
   data () {
     return {
+      // 根据id 删除用户
+      delUser (id) {
+        this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          delUserById(id)
+            .then((res) => {
+              if (res.data.meta.status === 200) {
+                this.$message({
+                  type: 'success',
+                  message: '删除成功!'
+                })
+                this.init()
+              } else {
+                this.$message({
+                  type: 'err',
+                  message: res.data.meta.msg
+                })
+              }
+            })
+            .catch((err) => {
+              console.log(err)
+              this.$message({
+                type: 'err',
+                message: '删除失败'
+              })
+            })
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          })
+        })
+      },
       // 编辑用户的
       editDialogFormVisible: false,
       // 添加用户的
