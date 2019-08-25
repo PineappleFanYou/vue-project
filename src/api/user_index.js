@@ -27,3 +27,11 @@ export const editUser = (data) => {
     data
   })
 }
+
+// 实现用户状态设置
+export const updataUserState = (uid, type) => {
+  return axios({
+    url: `users/${uid}/state/${type}`,
+    method: 'put'
+  })
+}

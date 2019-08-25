@@ -30,10 +30,12 @@
         <el-table-column prop="mobile" label="电话"></el-table-column>
         <el-table-column label="用户状态">
           <template slot-scope="scope">
-              <el-switch v-model="scope.row.mg_state"  active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+            <!-- 事件说明：change --switch 状态发生变化时的回调函数，switch 官方规定只能使用change事件-->
+            <!-- scope.row.id 当前行数据的id，我们要知道我们是修改的哪一个用户状态 -->
+            <!-- scope.row.mg_state 用户布尔值，true  or  false, mg_state打印出来就知道了 -->
+              <el-switch v-model="scope.row.mg_state"  active-color="#13ce66" inactive-color="#ff4949" @change="changeState(scope.row.id,scope.row.mg_state)"></el-switch>
           </template>
         </el-table-column>
-
         <el-table-column label="操作" style="width:280px">
           <!-- 我们是要获取操作里面的每一行数据，不用把操作页包裹，如果包裹了，那就是要拿整个表单的数据 -->
           <template slot-scope="scope">
@@ -112,7 +114,7 @@
 </template>
 <script>
 // 调用axios接口
-import { getAllusers, addUsers, editUser } from '@/api/user_index.js'
+import { getAllusers, addUsers, editUser, updataUserState } from '@/api/user_index.js'
 export default {
   data () {
     return {
@@ -164,6 +166,24 @@ export default {
     }
   },
   methods: {
+    // 实现用户状态设置
+    /* 这里传入的两个参数只是形参，changeState (id, type)是要传入两个形参，如果这里不传入两个形参，那我们调用axios的时候就没有参入形参，为什么传入两个？因为，我们后台的接口文档写明了发送请求的时候要传入两个参数，然后我们传入两个参数过去，后台去判断是哪一条数据，不然根本不知道是修改哪一条 */
+    changeState (id, type) {
+      updataUserState(id, type)
+        .then((res) => {
+          if (res.data.meta.status === 200) {
+            this.$message.success('修改用户状态成功')
+            // 重新加载页面
+            this.init()
+          } else {
+            this.$message.warning(res.data.meta.msg)
+          }
+        })
+        .catch((err) => {
+          console.log(err)
+          this.$message.error('修改用户状态失败')
+        })
+    },
     // 点击确定，然后编辑成功
     editUser () {
       // 实现二次认证--用户有可能填空，我们不能让他们填空
