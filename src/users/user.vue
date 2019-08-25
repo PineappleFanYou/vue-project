@@ -43,7 +43,7 @@
               <el-button type="success" icon="el-icon-edit" @click='showEditDialog(scope.row)'></el-button>
             </el-tooltip>
             <el-tooltip class="item" effect="dark" content="分配角色" placement="top-start">
-              <el-button type="warning" icon="el-icon-share"></el-button>
+              <el-button type="warning" icon="el-icon-share" @click="shwoRoleDialog(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip class="item" effect="dark" content="删除" placement="top-start">
               <el-button type="danger" icon="el-icon-delete"  @click="delUser(scope.row.id)"></el-button>
@@ -110,14 +110,53 @@
     <el-button type="primary" @click="editUser">确 定</el-button>
   </div>
 </el-dialog>
+
+<!-- 分配角色对话框 -->
+<el-dialog title="分配角色" :visible.sync="grantDialogFormVisible">
+  <el-form :model="grantForm" :label-width="'80px'">
+    <el-form-item label="用户名" v-model="roleList.username">
+      <el-input v-model="grantForm.username" auto-complete="off" disabled style="width:100px"></el-input>
+    </el-form-item>
+    <el-form-item label="角色">
+      <!-- v-model="value":进行选项选择之后，:value的值会自动的赋值给v-model的属性 -->
+      <el-select v-model="grantForm.rid" clearable placeholder="请选择">
+        <!-- :label="item.label"展示给用户看的字符串--属性 -->
+        <!-- :value="item.value"背后的实际值，给程序员使用的(id)--属性 -->
+    <el-option
+      v-for="item in roleList"
+      :key="item.id"
+      :label="item.roleName"
+      :value="item.id">
+    </el-option>
+  </el-select>
+    </el-form-item>
+  </el-form>
+  <div slot="footer" class="dialog-footer">
+    <el-button @click="grantDialogFormVisible = false">取 消</el-button>
+    <el-button type="primary" @click="grantUser">确 定</el-button>
+  </div>
+</el-dialog>
+
   </div>
 </template>
 <script>
 // 调用axios接口
-import { getAllusers, addUsers, editUser, updataUserState, delUserById } from '@/api/user_index.js'
+import { getAllusers, addUsers, editUser, updataUserState, delUserById, grantUserRole } from '@/api/user_index.js'
+import { getAllRoleList } from '@/api/role_index.js'
 export default {
   data () {
     return {
+      roleList: [],
+      // 实现分配角色
+      grantDialogFormVisible: false,
+      // 实现分配角色,定义成员
+      grantForm: {
+        username: '',
+        // 用户id
+        id: '',
+        // 角色id
+        rid: ''
+      },
       // 根据id 删除用户
       delUser (id) {
         this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
@@ -202,6 +241,33 @@ export default {
     }
   },
   methods: {
+    // 分配角色的展示
+    shwoRoleDialog (row) {
+      this.grantDialogFormVisible = true
+      this.grantForm.username = row.username
+      this.grantForm.id = row.id
+      this.grantForm.rid = row.rid
+    },
+    // 实现分配角色
+    grantUser () {
+      // console.log(this.grantForm)
+      if (this.grantForm.rid) {
+        grantUserRole(this.grantForm)
+          .then(res => {
+            console.log(res)
+            if (res.data.meta.status === 200) {
+              this.$message.success(res.data.meta.msg)
+              this.grantDialogFormVisible = false
+              this.init()
+            }
+          })
+          .catch(err => {
+            console.log(err)
+          })
+      } else {
+        this.$message.error('请选择角色')
+      }
+    },
     // 实现用户状态设置
     /* 这里传入的两个参数只是形参，changeState (id, type)是要传入两个形参，如果这里不传入两个形参，那我们调用axios的时候就没有参入形参，为什么传入两个？因为，我们后台的接口文档写明了发送请求的时候要传入两个参数，然后我们传入两个参数过去，后台去判断是哪一条数据，不然根本不知道是修改哪一条 */
     changeState (id, type) {
@@ -320,6 +386,16 @@ export default {
   // 这些数据是一加载就要显示出来的，所以只有钩子函数适合
   mounted () {
     this.init()
+    getAllRoleList()
+      .then((res) => {
+        console.log(res)
+        if (res.data.meta.status === 200) {
+          this.roleList = res.data.data
+        }
+      })
+      .catch((err) => {
+        console.log(err)
+      })
   }
 }
 </script>

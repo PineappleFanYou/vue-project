@@ -44,3 +44,12 @@ export const delUserById = (id) => {
     method: 'delete'
   })
 }
+
+// 实现分配角色
+export const grantUserRole = (data) => {
+  return axios({
+    url: `users/${data.id}/role`,
+    method: 'put',
+    data: { rid: data.rid }
+  })
+}
