@@ -8,3 +8,22 @@ export const getAllusers = (params) => {
     params
   })
 }
+
+// 实现用户的新增
+export const addUsers = (data) => {
+  return axios({
+    url: 'users',
+    method: 'post',
+    data
+  })
+}
+
+// 实现用户编辑
+export const editUser = (data) => {
+  // console.log(data)
+  return axios({
+    url: `users/${data.id}`,
+    method: 'put',
+    data
+  })
+}
