@@ -157,42 +157,6 @@ export default {
         // 角色id
         rid: ''
       },
-      // 根据id 删除用户
-      delUser (id) {
-        this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          delUserById(id)
-            .then((res) => {
-              if (res.data.meta.status === 200) {
-                this.$message({
-                  type: 'success',
-                  message: '删除成功!'
-                })
-                this.init()
-              } else {
-                this.$message({
-                  type: 'err',
-                  message: res.data.meta.msg
-                })
-              }
-            })
-            .catch((err) => {
-              console.log(err)
-              this.$message({
-                type: 'err',
-                message: '删除失败'
-              })
-            })
-        }).catch(() => {
-          this.$message({
-            type: 'info',
-            message: '已取消删除'
-          })
-        })
-      },
       // 编辑用户的
       editDialogFormVisible: false,
       // 添加用户的
@@ -241,6 +205,47 @@ export default {
     }
   },
   methods: {
+    // 根据id 删除用户
+    delUser (id) {
+      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        delUserById(id)
+          .then((res) => {
+            if (res.data.meta.status === 200) {
+              this.$message({
+                type: 'success',
+                message: '删除成功!'
+              })
+              if (this.userList.length === 1) {
+                if (this.userobj.pagenum > 1) {
+                  this.userobj.pagenum--
+                  this.init()
+                }
+              }
+            } else {
+              this.$message({
+                type: 'err',
+                message: res.data.meta.msg
+              })
+            }
+          })
+          .catch((err) => {
+            console.log(err)
+            this.$message({
+              type: 'err',
+              message: '删除失败'
+            })
+          })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    },
     // 分配角色的展示
     shwoRoleDialog (row) {
       this.grantDialogFormVisible = true
@@ -254,7 +259,6 @@ export default {
       if (this.grantForm.rid) {
         grantUserRole(this.grantForm)
           .then(res => {
-            console.log(res)
             if (res.data.meta.status === 200) {
               this.$message.success(res.data.meta.msg)
               this.grantDialogFormVisible = false
@@ -328,7 +332,6 @@ export default {
         if (valid) {
           addUsers(this.addForm)
             .then((res) => {
-              console.log(res)
               if (res.data.meta.status === 201) {
                 // 如果我们添加成功了，是直接加到数据库的，所以我们添加成功之后要刷新页面才能看到
                 this.$message.success('添加用户成功')
@@ -370,6 +373,7 @@ export default {
           // console.log(res)
           if (res.data.meta.status === 200) {
             this.userList = res.data.data.users
+            // console.log(this.userList)
             // 获取记录总数
             this.total = res.data.data.total
           } else if (res.data.meta.status === 400) {
@@ -388,7 +392,6 @@ export default {
     this.init()
     getAllRoleList()
       .then((res) => {
-        console.log(res)
         if (res.data.meta.status === 200) {
           this.roleList = res.data.data
         }

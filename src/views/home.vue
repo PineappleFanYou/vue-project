@@ -28,7 +28,7 @@
           <i class="el-icon-setting"></i>
           <span>权限管理</span>
         </template>
-          <el-menu-item index="2-1">
+          <el-menu-item index="/home/rigthList">
             <template slot="title">
           <i class="el-icon-edit"></i>
           <span>权限列表</span>
