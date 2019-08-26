@@ -6,6 +6,7 @@ import Home from '@/views/home.vue'
 import Welcome from '@/views/welcome.vue'
 import User from '@/views/users/user.vue'
 import rigthList from '@/views/rigths/rigthList.vue'
+import roleList from '@/views/rigths/roleList.vue'
 // use
 Vue.use(VueRouter)
 export default new VueRouter({
@@ -40,6 +41,11 @@ export default new VueRouter({
           name: 'rigthList',
           path: 'rigthList',
           component: rigthList
+        },
+        {
+          name: 'roles',
+          path: 'roles',
+          component: roleList
         }
       ]
     }
