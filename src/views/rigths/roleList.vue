@@ -19,8 +19,9 @@
               <el-tag
                 closable
                 :type="'success'"
-                @close="delRoleList(props.row, first.id)"
+                @close="cnt=0;delRoleList(props.row, first.id)"
               >{{first.authName}}</el-tag>
+              <!-- 上面定义 cnt=0; 是想让在data()函数对象中定义的cnt 重置为0，如果我们不重置为0，那么我们在cnt++ 自增之后，cnt > 0 始终大于0，所以我们重新置0 -->
             </el-col>
             <el-col :span="20">
               <el-row v-for="second in first.children" :key="second.id" class="secondjurisdiction">
@@ -28,7 +29,7 @@
                   <el-tag
                     closable
                     :type="'warning'"
-                    @close="delRoleList(props.row, second.id)"
+                    @close="cnt=0;delRoleList(props.row, second.id)"
                   >{{second.authName}}</el-tag>
                 </el-col>
                 <el-col :span="20">
@@ -38,7 +39,7 @@
                     v-for="third in second.children"
                     :key="third.id"
                     class="thirdjurisdiction"
-                    @close="delRoleList(props.row, third.id)"
+                    @close="cnt=0;delRoleList(props.row, third.id)"
                   >{{third.authName}}</el-tag>
                 </el-col>
               </el-row>
@@ -55,13 +56,13 @@
       <el-table-column label="操作">
         <template slot-scope="scope">
           <el-tooltip class="item" effect="dark" content="编辑" placement="top-start">
-            <el-button type="primary" icon="el-icon-edit"></el-button>
+            <el-button type="success" icon="el-icon-edit"></el-button>
           </el-tooltip>
           <el-tooltip class="item" effect="dark" content="角色授权" placement="top-start">
-            <el-button type="primary" icon="el-icon-share" @click="showGrantDialog(scope.row)"></el-button>
+            <el-button type="warning" icon="el-icon-share" @click="showGrantDialog(scope.row)"></el-button>
           </el-tooltip>
           <el-tooltip class="item" effect="dark" content="删除" placement="top-start">
-            <el-button type="primary" icon="el-icon-delete"></el-button>
+            <el-button type="danger" icon="el-icon-delete"></el-button>
           </el-tooltip>
         </template>
       </el-table-column>
@@ -97,8 +98,13 @@ import { getAllRightList } from '@/api/rigths_index.js'
 export default {
   data () {
     return {
+      // 这里定义一个常量，等一下要用
+      cnt: 0,
+      // 这里定义一个角色id
       roleId: '',
+      // 这里是让角色授权框一开始就隐藏，点击的时候才是true
       grantdialogFormVisible: false,
+      // 修改默认的配置选项:props
       defaultProps: {
         label: 'authName',
         children: 'children'
@@ -188,12 +194,29 @@ export default {
         .then(res => {
           //   console.log(res)
           if (res.data.meta.status === 200) {
+            // 这里判断，如果我们定义的 === 0，那就进入这个判断，弹出提示框
+            if (this.cnt === 0) {
+              this.$message.success('取消权限成功')
+              // 在这里自增，当第一次进入之后，自增一次，那么，当cnt > 0 就进不来了，就不会弹框了
+              this.cnt++
+            }
             // 刷新,不要使用init，因为init会刷新整个表格，造成展开行合并
             // res.data.data就是实现当前权限删除操作后该角色还拥有的权限数据
             // 展开行数据：scope.row.children
             row.children = res.data.data
-            this.$message.success('取消权限成功')
             // console.log(res)
+            // 判断当前权限是否还有下一级权限，如果没有，则需要将这级权限也删除
+            row.children.forEach((v1, in1) => { // 这里是遍历一级权限
+              if (v1.children.length === 0) {
+                this.delRoleList(row, v1.id) // 这里是，如果遍历一级权限后，发现没有二级权限，我们使用递归，这个函数调用自己本身，传入一级权限的id，然后删除自己
+              } else {
+                v1.children.forEach((v2, in2) => { // 遍历二级权限，如果没有三级权限，则使用递归，调用自己删除二级权限
+                  if (v2.children.length === 0) {
+                    this.delRoleList(row, v2.id)
+                  }
+                })
+              }
+            })
           }
         })
         .catch(err => {
