@@ -44,6 +44,9 @@
               </el-row>
             </el-col>
           </el-row>
+           <el-row>
+              <el-col :span="24" v-show="props.row.children.length === 0">还没有任何的权限，请先分配</el-col>
+            </el-row>
         </template>
       </el-table-column>
       <el-table-column type="index" width="50"></el-table-column>
@@ -55,7 +58,7 @@
             <el-button type="primary" icon="el-icon-edit"></el-button>
           </el-tooltip>
           <el-tooltip class="item" effect="dark" content="角色授权" placement="top-start">
-            <el-button type="primary" icon="el-icon-share" @click="btnRoleList"></el-button>
+            <el-button type="primary" icon="el-icon-share" @click="showGrantDialog(scope.row)"></el-button>
           </el-tooltip>
           <el-tooltip class="item" effect="dark" content="删除" placement="top-start">
             <el-button type="primary" icon="el-icon-delete"></el-button>
@@ -73,22 +76,23 @@
     <!-- :props="defaultProps"> // 配置：节点展示的文本属性 节点的下级数据 -->
     <el-dialog title="角色授权" :visible.sync="grantdialogFormVisible">
     <el-tree
-      :data="roleList"
+      :data="rigthList"
       show-checkbox
       node-key="id"
-      :default-checked-keys="[5]"
+      :default-checked-keys="chkedArr"
       :default-expand-all='true'
       :props="defaultProps"
     ></el-tree>
-    </el-dialog>
-    <div slot="footer" class="dialog-footer">
+     <div slot="footer" class="dialog-footer">
         <el-button @click="grantdialogFormVisible = false">取 消</el-button>
         <el-button type="primary">确 定</el-button>
       </div>
+    </el-dialog>
   </div>
 </template>
 <script>
 import { getAllRoleList, delRightByRoleId } from '@/api/role_index.js'
+import { getAllRightList } from '@/api/rigths_index.js'
 export default {
   data () {
     return {
@@ -97,15 +101,52 @@ export default {
         label: 'authName',
         children: 'children'
       },
-      roleList: []
+      // 这个是加载树形的数组
+      rigthList: [],
+      // 这个是展开行数据的数组
+      roleList: [],
+      // 当前角色所拥有的权限id的数组
+      chkedArr: []
     }
   },
   methods: {
-    // 授权角色对话框
-    btnRoleList () {
+    // 弹出授权角色对话框--开始
+    showGrantDialog (row) {
+      // 1.让对话框展示
       this.grantdialogFormVisible = true
+      // 2.加载树形组件的数据--就是一点开角色授权，默认数据的展示--开始
+      getAllRightList('tree')
+        .then(res => {
+          // console.log(res)
+          if (res.data.meta.status === 200) {
+            this.rigthList = res.data.data
+          }
+          // 选中默认节点前要清空上一次选中的
+          this.chkedArr.length = 0
+          // 3.获取权限id,让节点默认被选择
+          // 获取当前角色的所有权限id，添加到chkedArr
+          // 我们只需要获取最后一级，--建议尽量做一个判断
+          row.children.forEach(first => {
+            if (first.children.length > 0) {
+              first.children.forEach(second => {
+                if (second.children.length > 0) {
+                  second.children.forEach(third => {
+                    this.chkedArr.push(third.id)
+                  })
+                }
+              })
+            }
+          })
+        })
+        .catch(err => {
+          console.log(err)
+        })
+
+      // 加载树形组件的数据--就是一点开角色授权，默认数据的展示--开始
     },
-    // 删除角色
+    // 弹出授权角色对话框--结束
+
+    // 这个是取消授权角色里面的权限--开始
     delRoleList (row, rightId) {
       delRightByRoleId(row.id, rightId)
         .then(res => {
@@ -123,8 +164,10 @@ export default {
           console.log(err)
         })
     }
+    // 这个是取消授权角色里面的权限--结束
   },
   mounted () {
+    // 这个是一点击角色列表，然后就加载数据到页面的---开始
     getAllRoleList()
       .then(res => {
         // console.log(res)
@@ -136,6 +179,7 @@ export default {
         console.log(err)
       })
   }
+  // 这个是一点击角色列表，然后就加载数据到页面的---结束
 }
 </script>
 <style lang="less" scoped>
