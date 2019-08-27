@@ -77,6 +77,7 @@
     <el-dialog title="角色授权" :visible.sync="grantdialogFormVisible">
     <el-tree
       :data="rigthList"
+      ref = "tree"
       show-checkbox
       node-key="id"
       :default-checked-keys="chkedArr"
@@ -85,17 +86,18 @@
     ></el-tree>
      <div slot="footer" class="dialog-footer">
         <el-button @click="grantdialogFormVisible = false">取 消</el-button>
-        <el-button type="primary">确 定</el-button>
+        <el-button type="primary" @click="grantRole">确 定</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 <script>
-import { getAllRoleList, delRightByRoleId } from '@/api/role_index.js'
+import { getAllRoleList, delRightByRoleId, grantRolsById } from '@/api/role_index.js'
 import { getAllRightList } from '@/api/rigths_index.js'
 export default {
   data () {
     return {
+      roleId: '',
       grantdialogFormVisible: false,
       defaultProps: {
         label: 'authName',
@@ -110,8 +112,41 @@ export default {
     }
   },
   methods: {
+    // 调用接口方法实现角色权限--开始
+    grantRole () {
+      // rids--参数名  权限 ID 列表  以 , 分割的权限 ID 列表--接口文档规定的
+      // 先获取到当前用户所选择所有的权限id，拼接为以（，逗号）分割的字符串
+      // getHalfCheckedKeys 若节点可被选择（即 show-checkbox 为 true），则返回目前半选中的节点的 key 所组成的数组
+      // console.log(this.$refs.tree.getHalfCheckedKeys())
+      // getCheckedKeys 若节点可被选择（即 show-checkbox 为 true），则返回目前被选中的节点的 key 所组成的数组
+      // console.log(this.$refs.tree.getCheckedKeys())
+      // concat() 方法用于连接两个或多个数组。
+      // let arr = this.$refs.tree.getHalfCheckedKeys().concat(this.$refs.tree.getCheckedKeys())
+      let arr = [...this.$refs.tree.getHalfCheckedKeys(), ...this.$refs.tree.getCheckedKeys()]
+      let temp = arr.join(',')
+      // console.log(this.roleId)
+      // console.log(temp)
+      grantRolsById(this.roleId, temp)
+        .then(res => {
+          // console.log(res)
+          if (res.data.meta.status === 200) {
+            this.$message.success(res.data.meta.msg)
+            this.grantdialogFormVisible = false
+            this.init()
+          } else {
+            this.$message.error(res.data.meta.msg)
+          }
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    },
+
+    // 调用接口方法实现角色权限--结束
+
     // 弹出授权角色对话框--开始
     showGrantDialog (row) {
+      this.roleId = row.id
       // 1.让对话框展示
       this.grantdialogFormVisible = true
       // 2.加载树形组件的数据--就是一点开角色授权，默认数据的展示--开始
@@ -125,7 +160,7 @@ export default {
           this.chkedArr.length = 0
           // 3.获取权限id,让节点默认被选择
           // 获取当前角色的所有权限id，添加到chkedArr
-          // 我们只需要获取最后一级，--建议尽量做一个判断
+          // 我们只需要获取最后一级，--建议尽量做一个判断--开始
           row.children.forEach(first => {
             if (first.children.length > 0) {
               first.children.forEach(second => {
@@ -137,6 +172,7 @@ export default {
               })
             }
           })
+          // 我们只需要获取最后一级，--建议尽量做一个判断--结束
         })
         .catch(err => {
           console.log(err)
@@ -163,21 +199,24 @@ export default {
         .catch(err => {
           console.log(err)
         })
-    }
+    },
     // 这个是取消授权角色里面的权限--结束
+    init () {
+      getAllRoleList()
+        .then(res => {
+        // console.log(res)
+          if (res.data.meta.status === 200) {
+            this.roleList = res.data.data
+          }
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    }
   },
   mounted () {
     // 这个是一点击角色列表，然后就加载数据到页面的---开始
-    getAllRoleList()
-      .then(res => {
-        // console.log(res)
-        if (res.data.meta.status === 200) {
-          this.roleList = res.data.data
-        }
-      })
-      .catch(err => {
-        console.log(err)
-      })
+    this.init()
   }
   // 这个是一点击角色列表，然后就加载数据到页面的---结束
 }
