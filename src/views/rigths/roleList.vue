@@ -7,7 +7,7 @@
       <el-breadcrumb-item>角色列表</el-breadcrumb-item>
     </el-breadcrumb>
     <!-- 添加按钮 -->
-    <el-button type="success" class="btnmgb">添加角色</el-button>
+    <el-button type="success" class="btnmgb" @click="addRoleDialogFormVisible = true">添加角色</el-button>
     <!-- 表格-展开航 -->
     <el-table :data="roleList" style="width: 100%" border>
       <el-table-column type="expand">
@@ -90,14 +90,45 @@
         <el-button type="primary" @click="grantRole">确 定</el-button>
       </div>
     </el-dialog>
+    <!-- 添加角色对话框 -->
+    <el-dialog title="添加角色" :visible.sync="addRoleDialogFormVisible">
+ <el-form :model="roleForm"  :rules="rules" ref="roleForm" label-width="100px" class="demo-roleForm">
+  <el-form-item label="角色名称" prop="roleName">
+    <el-input v-model="roleForm.roleName"></el-input>
+  </el-form-item>
+  <el-form-item label="角色描述" prop="roleDesc">
+    <el-input v-model="roleForm.roleDesc"></el-input>
+  </el-form-item>
+  </el-form>
+  <div slot="footer" class="dialog-footer">
+    <el-button @click="addRoleDialogFormVisible = false">取 消</el-button>
+    <el-button type="primary" @click="addRole">确 定</el-button>
+  </div>
+</el-dialog>
+
   </div>
 </template>
 <script>
-import { getAllRoleList, delRightByRoleId, grantRolsById } from '@/api/role_index.js'
+import { getAllRoleList, delRightByRoleId, grantRolsById, addRoleList } from '@/api/role_index.js'
 import { getAllRightList } from '@/api/rigths_index.js'
 export default {
   data () {
     return {
+      rules: {
+        roleName: [
+          { required: true, message: '请输入角色名称', trigger: 'blur' }
+        ],
+        roleDesc: [
+          { required: true, message: '请输入角色描述', trigger: 'blur' }
+        ]
+      },
+      // 这里是让添加角色框一开始就隐藏，点击的时候才是true
+      addRoleDialogFormVisible: false,
+      // 这里定义一个对象，等点击确定的时候再赋值
+      roleForm: {
+        roleName: '',
+        roleDesc: ''
+      },
       // 这里定义一个常量，等一下要用
       cnt: 0,
       // 这里定义一个角色id
@@ -118,6 +149,33 @@ export default {
     }
   },
   methods: {
+    // 点击确定，然后添加角色
+    addRole () {
+      this.$refs.roleForm.validate((valid) => {
+        if (valid) {
+          addRoleList(this.roleForm)
+            .then(res => {
+              // console.log(res)
+              if (res.data.meta.status === 201) {
+                this.roleForm = res.data.data
+                this.addRoleDialogFormVisible = false
+                this.$message.success(res.data.meta.msg)
+                this.$refs.roleForm.resetFields()
+                this.init()
+              } else {
+                this.$message.error(res.data.meta.msg)
+              }
+            })
+            .catch(err => {
+              console.log(err)
+              this.$message.error('添加失败')
+            })
+        } else {
+          this.$message.error('请输入角色名称或角色描述')
+          return false
+        }
+      })
+    },
     // 调用接口方法实现角色权限--开始
     grantRole () {
       // rids--参数名  权限 ID 列表  以 , 分割的权限 ID 列表--接口文档规定的

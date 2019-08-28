@@ -224,6 +224,8 @@ export default {
                   this.userobj.pagenum--
                   this.init()
                 }
+              } else {
+                this.init()
               }
             } else {
               this.$message({
