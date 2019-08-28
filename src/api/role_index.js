@@ -32,3 +32,20 @@ export const addRoleList = (data) => {
     data
   })
 }
+
+// 5.编辑用户
+export const editUserRoleById = (data) => {
+  return axios({
+    url: `roles/${data.id}`,
+    method: 'put',
+    data
+  })
+}
+
+// 6.删除角色
+export const delRoleById = (id) => {
+  return axios({
+    url: `roles/${id}`,
+    method: 'delete'
+  })
+}

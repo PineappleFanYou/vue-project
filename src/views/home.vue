@@ -46,7 +46,7 @@
           <i class="el-icon-setting"></i>
           <span>商品管理</span>
         </template>
-          <el-menu-item index="3-1">
+          <el-menu-item index="/home/goodList">
             <template slot="title">
           <i class="el-icon-edit"></i>
           <span>商品列表</span>

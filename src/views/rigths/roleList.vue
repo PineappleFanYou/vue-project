@@ -56,13 +56,13 @@
       <el-table-column label="操作">
         <template slot-scope="scope">
           <el-tooltip class="item" effect="dark" content="编辑" placement="top-start">
-            <el-button type="success" icon="el-icon-edit"></el-button>
+            <el-button type="success" icon="el-icon-edit" @click="showEditDialog(scope.row)"></el-button>
           </el-tooltip>
           <el-tooltip class="item" effect="dark" content="角色授权" placement="top-start">
             <el-button type="warning" icon="el-icon-share" @click="showGrantDialog(scope.row)"></el-button>
           </el-tooltip>
           <el-tooltip class="item" effect="dark" content="删除" placement="top-start">
-            <el-button type="danger" icon="el-icon-delete"></el-button>
+            <el-button type="danger" icon="el-icon-delete" @click="delEditRole(scope.row.id)"></el-button>
           </el-tooltip>
         </template>
       </el-table-column>
@@ -105,15 +105,38 @@
     <el-button type="primary" @click="addRole">确 定</el-button>
   </div>
 </el-dialog>
-
+<!-- 编辑用户对话框 -->
+<el-dialog title="编辑用户" :visible.sync="editUserDialogFormVisible">
+  <el-form :model="editUser" :label-width="'80px'" :rules='rules' ref="editUser">
+    <el-form-item label="角色名称" prop="roleName">
+      <el-input v-model="editUser.roleName" auto-complete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="角色描述" prop="roleDesc">
+      <el-input v-model="editUser.roleDesc" auto-complete="off"></el-input>
+    </el-form-item>
+  </el-form>
+  <div slot="footer" class="dialog-footer">
+    <el-button @click="editUserDialogFormVisible = false">取 消</el-button>
+    <el-button type="primary" @click="editUserRole">确 定</el-button>
+  </div>
+</el-dialog>
   </div>
 </template>
 <script>
-import { getAllRoleList, delRightByRoleId, grantRolsById, addRoleList } from '@/api/role_index.js'
+import { getAllRoleList, delRightByRoleId, grantRolsById, addRoleList, editUserRoleById, delRoleById } from '@/api/role_index.js'
 import { getAllRightList } from '@/api/rigths_index.js'
 export default {
   data () {
     return {
+      // 这里是让添加角色编辑用户框一开始就隐藏，点击的时候才是true
+      editUserDialogFormVisible: false,
+      // 这里定义一个编辑用户的对象
+      editUser: {
+        roleName: '',
+        roleDesc: '',
+        id: ''
+      },
+      // 这里是添加角色的验证规则
       rules: {
         roleName: [
           { required: true, message: '请输入角色名称', trigger: 'blur' }
@@ -149,7 +172,69 @@ export default {
     }
   },
   methods: {
-    // 点击确定，然后添加角色
+    // 调用接口方法--实现删除--开始
+    delEditRole (row) {
+      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        delRoleById(row)
+          .then(res => {
+            if (res.data.meta.status === 200) {
+              this.$message.success(res.data.meta.msg)
+              this.init()
+            }
+          })
+          .catch(err => {
+            console.log(err)
+          })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    },
+
+    // 调用接口方法--实现删除--开始
+    // 调用接口方法实现用户编辑--开始
+    editUserRole () {
+      this.$refs.editUser.validate((valid) => {
+        if (valid) {
+          editUserRoleById(this.editUser)
+            .then(res => {
+              if (res.data.meta.status === 200) {
+                this.$message.success(res.data.meta.msg)
+                this.editUser = res.data.data
+                this.editUserDialogFormVisible = false
+                this.$refs.editUser.resetFields()
+                this.init()
+              } else {
+                this.$message.error(res.data.meta.msg)
+              }
+            })
+            .catch(err => {
+              console.log(err)
+              this.$message.error('数据获取失败')
+            })
+        } else {
+          console.log('error submit!!')
+          return false
+        }
+      })
+    },
+    // 调用接口方法实现用户编辑--结束
+
+    // 权限管理中的编辑默认数据展示--showEditDialog-开始
+    showEditDialog (row) {
+      this.editUserDialogFormVisible = true
+      this.editUser.roleName = row.roleName
+      this.editUser.roleDesc = row.roleDesc
+      this.editUser.id = row.id
+    },
+    // 权限管理中的编辑默认数据展示--showEditDialog-结束
+    // 点击确定，然后添加角色---开始
     addRole () {
       this.$refs.roleForm.validate((valid) => {
         if (valid) {
@@ -176,6 +261,8 @@ export default {
         }
       })
     },
+    // 点击确定，然后添加角色---结束
+
     // 调用接口方法实现角色权限--开始
     grantRole () {
       // rids--参数名  权限 ID 列表  以 , 分割的权限 ID 列表--接口文档规定的

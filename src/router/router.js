@@ -7,6 +7,7 @@ import Welcome from '@/views/welcome.vue'
 import User from '@/views/users/user.vue'
 import rigthList from '@/views/rigths/rigthList.vue'
 import roleList from '@/views/rigths/roleList.vue'
+import goodList from '@/views/goods/list.vue'
 // use
 Vue.use(VueRouter)
 export default new VueRouter({
@@ -46,6 +47,11 @@ export default new VueRouter({
           name: 'roles',
           path: 'roles',
           component: roleList
+        },
+        {
+          name: 'goodList',
+          path: 'goodList',
+          component: goodList
         }
       ]
     }
