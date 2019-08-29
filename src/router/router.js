@@ -7,7 +7,8 @@ import Welcome from '@/views/welcome.vue'
 import User from '@/views/users/user.vue'
 import rigthList from '@/views/rigths/rigthList.vue'
 import roleList from '@/views/rigths/roleList.vue'
-import goodList from '@/views/goods/list.vue'
+import Goods from '@/views/goods/goods.vue'
+import List from '@/views/goods/list.vue'
 // use
 Vue.use(VueRouter)
 export default new VueRouter({
@@ -39,8 +40,8 @@ export default new VueRouter({
           component: User
         },
         {
-          name: 'rigthList',
-          path: 'rigthList',
+          name: 'rights',
+          path: 'rights',
           component: rigthList
         },
         {
@@ -49,9 +50,17 @@ export default new VueRouter({
           component: roleList
         },
         {
-          name: 'goodList',
-          path: 'goodList',
-          component: goodList
+          name: 'goods',
+          path: 'goods',
+          component: Goods,
+          redirect: { name: 'list' },
+          children: [
+            {
+              name: 'list',
+              path: 'list',
+              component: List
+            }
+          ]
         }
       ]
     }
